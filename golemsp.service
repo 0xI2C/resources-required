@@ -1,12 +1,12 @@
 [Unit]
-Description=Start Golem
+Description=Deployed Server
 After=network.target
 StartLimitIntervalSec=0
 [Service]
-Environment=PATH=/home/<your_username>/.local/bin/
+Environment=PATH=/home/$(whoami)/.local/bin/
 Type=simple
 Restart=always
-User=<your username>
-ExecStart=/home/<your_username>/.local/bin/golemsp run
+User=$(whoami)
+ExecStart=/home/$(whoami)/.local/bin/golemsp run
 [Install]
 WantedBy=multi-user.target
