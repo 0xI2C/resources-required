@@ -186,7 +186,7 @@ install_plugins() {
   _dst="$2/plugins"
   sudo mkdir -p "$_dst"
 
-  (cd "$_src" && cp -r ./* "$_dst")
+  (cd "$_src" && sudo cp -r ./* "$_dst")
 }
 
 main() {
