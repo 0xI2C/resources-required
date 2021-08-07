@@ -13,21 +13,11 @@ version_name() {
 	local name
 
 	name=${1#pre-rel-}
-	printf "%s" "${name#v}"
-}
-
-say() {
-    printf 'golem-installer: %s\n' "$1"
-}
-
-err() {
-    say "$1" >&2
-    exit 1
 }
 
 need_cmd() {
     if ! check_cmd "$1"; then
-        err "need '$1' (command not found)"
+        exit 1
     fi
 }
 
@@ -36,14 +26,20 @@ check_cmd() {
 }
 
 assert_nz() {
-    if [ -z "$1" ]; then err "assert_nz $2"; fi
+    if [ -z "$1" ]; then exit 1; fi
 }
 
 downloader() {
     local _dld
     _dld=wget
-    
-    wget -q --https-only "$1" -O "$2"
+
+    if [ "$1" = --check ]; then
+        need_cmd "$_dld"
+    elif [ "$_dld" = wget ]; then
+        wget -q --https-only "$1" -O "$2"
+    else
+        exit 1
+    fi
 }
 
 autodetect_bin() {
@@ -80,11 +76,6 @@ ensurepath() {
         ;;
     esac
 
-    say "" >&2
-    say "Add $_required to your path" >&2
-    say 'HINT:   echo '\''export PATH="$HOME/.local/bin:$PATH"'\'" >> ~/${_rcfile}" >&2
-    say "Update your current terminal." >&2
-    say 'HINT:   export PATH="$HOME/.local/bin:$PATH"' >&2
     exit 1
 }
 
@@ -110,7 +101,7 @@ detect_dist() {
             _cputype=x86_64
             ;;
         *)
-            err "invalid cputype: $_cputype"
+            exit 1
             ;;
     esac
     case "$_ostype" in
@@ -124,26 +115,11 @@ detect_dist() {
             _ostype=windows
             ;;
         *)
-            err "invalid os type: $_ostype"
+            exit 1
     esac
     echo -n "$_ostype"
 }
 
-_dl_head() {
-    local _sep
-    _sep="-----"
-    _sep="$_sep$_sep$_sep$_sep"
-    printf "%-20s %25s\n" " Component " " Version" >&2
-    printf "%-20s %25s\n" "-----------" "$_sep" >&2
-}
-
-_dl_start() {
-	printf "%-20s %25s " "$1" "$(version_name "$2")" >&2
-}
-
-_dl_end() {
-    printf "[done]\n" >&2
-}
 
 download_core() {
     local _ostype _variant _url
@@ -153,9 +129,7 @@ download_core() {
     mkdir -p "$YA_INSTALLER_DATA/bundles"
 
     _url="https://github.com/golemfactory/yagna/releases/download/${YA_INSTALLER_CORE}/golem-${_variant}-${_ostype}-${YA_INSTALLER_CORE}.tar.gz"
-    _dl_start "golem core" "$YA_INSTALLER_CORE"
     (downloader "$_url" - | tar -C "$YA_INSTALLER_DATA/bundles" -xz -f - ) || return 1
-    _dl_end
     echo -n "$YA_INSTALLER_DATA/bundles/golem-${_variant}-${_ostype}-${YA_INSTALLER_CORE}"
 }
 
@@ -167,9 +141,7 @@ download_wasi() {
     test -d "$YA_INSTALLER_DATA/bundles" || mkdir -p "$YA_INSTALLER_DATA/bundles"
 
     _url="https://github.com/golemfactory/ya-runtime-wasi/releases/download/v${YA_INSTALLER_WASI}/ya-runtime-wasi-${_ostype}-v${YA_INSTALLER_WASI}.tar.gz"
-    _dl_start "wasi runtime" "$YA_INSTALLER_WASI"
     downloader "$_url" - | tar -C "$YA_INSTALLER_DATA/bundles" -xz -f -
-    _dl_end
     echo -n "$YA_INSTALLER_DATA/bundles/ya-runtime-wasi-${_ostype}-v${YA_INSTALLER_WASI}"
 }
 
@@ -180,9 +152,7 @@ download_vm() {
     test -d "$YA_INSTALLER_DATA/bundles" || mkdir -p "$YA_INSTALLER_DATA/bundles"
 
     _url="https://github.com/golemfactory/ya-runtime-vm/releases/download/v${YA_INSTALLER_VM}/ya-runtime-vm-${_ostype}-v${YA_INSTALLER_VM}.tar.gz"
-    _dl_start "vm runtime" "$YA_INSTALLER_VM"
     (downloader "$_url" - | tar -C "$YA_INSTALLER_DATA/bundles" -xz -f -) || err "failed to download $_url"
-    _dl_end
     echo -n "$YA_INSTALLER_DATA/bundles/ya-runtime-vm-${_ostype}-v${YA_INSTALLER_VM}"
 }
 
@@ -195,7 +165,6 @@ install_bins() {
       _ln="cp"
       test -w "$_dest" || {
         _ln="sudo cp"
-        say "to install to $_dest, root priviliges required"
       }
     else
       _ln="ln -sf"
@@ -229,13 +198,11 @@ main() {
     need_cmd mkdir
     need_cmd rm
     need_cmd rmdir
-    say "installing to $YA_INSTALLER_BIN"
 
     test -d "$YA_INSTALLER_BIN" || mkdir -p "$YA_INSTALLER_BIN"
 
     _ostype="$(detect_dist)"
 
-    _dl_head
     _src_core=$(download_core "$_ostype" "$YA_INSTALLER_VARIANT") || return 1
     if [ "$YA_INSTALLER_VARIANT" = "provider" ]; then
       _src_wasi=$(download_wasi "$_ostype")
