@@ -48,7 +48,7 @@ autodetect_bin() {
     _current_bin="$(command -v yagna)"
 
     if [ -z "$_current_bin" ]; then
-        echo -n "$HOME/.local/bin"
+        echo -n "/usr/bin"
         return
     fi
     dirname "$_current_bin"
@@ -79,9 +79,9 @@ ensurepath() {
     exit 1
 }
 
-YA_INSTALLER_DATA=${YA_INSTALLER_DATA:-$HOME/.local/share/ya-installer}
+YA_INSTALLER_DATA=${YA_INSTALLER_DATA:-/usr/share/ya-installer}
 YA_INSTALLER_BIN=${YA_INSTALLER_BIN:-$(autodetect_bin)}
-YA_INSTALLER_LIB=${YA_INSTALLER_LIB:-$HOME/.local/lib/yagna}
+YA_INSTALLER_LIB=${YA_INSTALLER_LIB:-/usr/lib/yagna}
 
 detect_dist() {
     local _ostype _cputype
