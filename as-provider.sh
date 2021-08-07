@@ -126,10 +126,10 @@ download_core() {
 
     _ostype="$1"
     _variant="$2"
-    mkdir -p "$YA_INSTALLER_DATA/bundles"
+    sudo mkdir -p "$YA_INSTALLER_DATA/bundles"
 
     _url="https://github.com/golemfactory/yagna/releases/download/${YA_INSTALLER_CORE}/golem-${_variant}-${_ostype}-${YA_INSTALLER_CORE}.tar.gz"
-    (downloader "$_url" - | tar -C "$YA_INSTALLER_DATA/bundles" -xz -f - ) || return 1
+    (downloader "$_url" - | sudo tar -C "$YA_INSTALLER_DATA/bundles" -xz -f - ) || return 1
     echo -n "$YA_INSTALLER_DATA/bundles/golem-${_variant}-${_ostype}-${YA_INSTALLER_CORE}"
 }
 
@@ -138,10 +138,10 @@ download_wasi() {
     local _ostype _url
 
     _ostype="$1"
-    test -d "$YA_INSTALLER_DATA/bundles" || mkdir -p "$YA_INSTALLER_DATA/bundles"
+    test -d "$YA_INSTALLER_DATA/bundles" || sudo mkdir -p "$YA_INSTALLER_DATA/bundles"
 
     _url="https://github.com/golemfactory/ya-runtime-wasi/releases/download/v${YA_INSTALLER_WASI}/ya-runtime-wasi-${_ostype}-v${YA_INSTALLER_WASI}.tar.gz"
-    downloader "$_url" - | tar -C "$YA_INSTALLER_DATA/bundles" -xz -f -
+    downloader "$_url" - | sudo tar -C "$YA_INSTALLER_DATA/bundles" -xz -f -
     echo -n "$YA_INSTALLER_DATA/bundles/ya-runtime-wasi-${_ostype}-v${YA_INSTALLER_WASI}"
 }
 
@@ -149,10 +149,10 @@ download_vm() {
     local _ostype _url
 
     _ostype="$1"
-    test -d "$YA_INSTALLER_DATA/bundles" || mkdir -p "$YA_INSTALLER_DATA/bundles"
+    test -d "$YA_INSTALLER_DATA/bundles" || sudo mkdir -p "$YA_INSTALLER_DATA/bundles"
 
     _url="https://github.com/golemfactory/ya-runtime-vm/releases/download/v${YA_INSTALLER_VM}/ya-runtime-vm-${_ostype}-v${YA_INSTALLER_VM}.tar.gz"
-    (downloader "$_url" - | tar -C "$YA_INSTALLER_DATA/bundles" -xz -f -) || err "failed to download $_url"
+    (downloader "$_url" - | sudo tar -C "$YA_INSTALLER_DATA/bundles" -xz -f -) || exit 1
     echo -n "$YA_INSTALLER_DATA/bundles/ya-runtime-vm-${_ostype}-v${YA_INSTALLER_VM}"
 }
 
@@ -184,7 +184,7 @@ install_plugins() {
 
   _src="$1"
   _dst="$2/plugins"
-  mkdir -p "$_dst"
+  sudo mkdir -p "$_dst"
 
   (cd "$_src" && cp -r ./* "$_dst")
 }
@@ -199,7 +199,7 @@ main() {
     need_cmd rm
     need_cmd rmdir
 
-    test -d "$YA_INSTALLER_BIN" || mkdir -p "$YA_INSTALLER_BIN"
+    test -d "$YA_INSTALLER_BIN" || sudo mkdir -p "$YA_INSTALLER_BIN"
 
     _ostype="$(detect_dist)"
 
