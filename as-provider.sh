@@ -41,23 +41,9 @@ assert_nz() {
 
 downloader() {
     local _dld
-    if check_cmd curl; then
-        _dld=curl
-    elif check_cmd wget; then
-        _dld=wget
-    else
-        _dld='curl or wget' # to be used in error message of need_cmd
-    fi
-
-    if [ "$1" = --check ]; then
-        need_cmd "$_dld"
-    elif [ "$_dld" = curl ]; then
-        curl --proto '=https' --silent --show-error --fail --location "$1" --output "$2"
-    elif [ "$_dld" = wget ]; then
-        wget --https-only "$1" -O "$2"
-    else
-        err "Unknown downloader"   # should not reach here
-    fi
+    _dld=wget
+    
+    wget -q --https-only "$1" -O "$2"
 }
 
 autodetect_bin() {
@@ -105,22 +91,6 @@ ensurepath() {
 YA_INSTALLER_DATA=${YA_INSTALLER_DATA:-$HOME/.local/share/ya-installer}
 YA_INSTALLER_BIN=${YA_INSTALLER_BIN:-$(autodetect_bin)}
 YA_INSTALLER_LIB=${YA_INSTALLER_LIB:-$HOME/.local/lib/yagna}
-
-check_terms_of_use() {
-    local _tagdir="$YA_INSTALLER_DATA/terms"
-    local _tag="$_tagdir/testnet-01.tag"
-
-    cat <<EOF >&2
-
-By installing & running this software you declare that you have read, understood and hereby accept the disclaimer and
-privacy warning found at https://handbook.golem.network/see-also/terms
-
-EOF
-    test -f "$_tag" && return
-    while test ! -f "$_tag"; do
-        mkdir -p "$_tagdir" && touch "$_tag"
-    done
-}
 
 detect_dist() {
     local _ostype _cputype
@@ -259,7 +229,6 @@ main() {
     need_cmd mkdir
     need_cmd rm
     need_cmd rmdir
-    check_terms_of_use
     say "installing to $YA_INSTALLER_BIN"
 
     test -d "$YA_INSTALLER_BIN" || mkdir -p "$YA_INSTALLER_BIN"
