@@ -3,10 +3,10 @@ Description=Deployed Server
 After=network.target
 StartLimitIntervalSec=0
 [Service]
-Environment=PATH=/usr/bin/
+Environment=PATH=/home/root/.local/bin/
 Type=simple
 Restart=always
 User=%u
-ExecStart=/usr/bin/golemsp run
+ExecStart=/home/root/.local/bin/golemsp run
 [Install]
 WantedBy=multi-user.target
